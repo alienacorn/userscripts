@@ -9,6 +9,7 @@
 // @exclude	http://*.reddit.com/user/*
 // @exclude	http://reddit.com/info/*
 // @exclude	http://*.reddit.com/info/*
+// @exclude	http://www.reddit.com/r/*/comments/*
 // ==/UserScript==
 
 var hidden_headlines = [];
