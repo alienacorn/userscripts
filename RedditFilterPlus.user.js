@@ -135,10 +135,10 @@ rf_saveOptions = function() {
 }
 
 rf_loadOptions = function() {
-	document.getElementById('titlefilter').value = GM_getValue('titles');
-	document.getElementById('urlfilter').value = GM_getValue('urls');
-	document.getElementById('userfilter').value = GM_getValue('users');
-	document.getElementById('subredditfilter').value = GM_getValue('subreddits');
+	document.getElementById('titlefilter').value = GM_getValue('titles') ? GM_getValue('titles') : '';
+	document.getElementById('urlfilter').value = GM_getValue('urls') ? GM_getValue('urls') : '';
+	document.getElementById('userfilter').value = GM_getValue('users') ? GM_getValue('users') : '';
+	document.getElementById('subredditfilter').value = GM_getValue('subreddits') ? GM_getValue('subreddits') : '';
 }
 
 rf_prefs = function() {
