@@ -55,22 +55,22 @@ get_regexps = function(cfg) {
 	
 	// add user matches
   for (i = 0; i < cfg.users.length; i++) {
-    regextbl.user.push('http://www.reddit.com/user/' + escape(cfg.users[i]) + '/');
+    regextbl.user.push('http://www.reddit.com/user/' + cfg.users[i] + '/');
   }
 	
 	// add subreddit matches
   for (i = 0; i < cfg.subreddits.length; i++) {
-    regextbl.subreddit.push('http://www.reddit.com/r/' + escape(cfg.subreddits[i]) + '/');
+    regextbl.subreddit.push('http://www.reddit.com/r/' + cfg.subreddits[i] + '/');
   }
 
 	// add url matches
   for (i = 0; i < cfg.urls.length; i++) {
-    regextbl.url.push(new RegExp(escape(cfg.urls[i]), 'i'));
+    regextbl.url.push(new RegExp(cfg.urls[i], 'i'));
   }
 	
 	// add title matches
   for (i = 0; i < cfg.titles.length; i++) {
-    regextbl.title.push(new RegExp(escape(cfg.titles[i]), 'i'));
+    regextbl.title.push(new RegExp(cfg.titles[i], 'i'));
   }
 	
   return regextbl;
