@@ -16,7 +16,7 @@ if (typeof GM_log === "undefined") {
 if (typeof GM_setValue === "undefined") {
   GM_setValue = function (name, value) {
     var date = new Date();
-    date.setTime(date.getTime()+(750*24*60*60*1000));
+    date.setTime(expdate.getTime()+(750*24*60*60*1000));
     var expires = "; expires="+date.toGMTString();
     document.cookie = name+"="+value+expires+"; path=/";
   }
