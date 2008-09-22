@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name	Reddit Filter Plus
-// @description	Hide unwanted links by user, title, or site. Preferences are found on the regular reddit preferences page.
+// @name	Reddit Filter and Highlighter
+// @description	Hide or highlight links by user, title, url or subreddit. Preferences are found on the regular reddit preferences page. Highlight colors may be entered as HTML colors (#123456) or with simple names.
 // @include	http://www.reddit.com/prefs/
 // @include	http://www.reddit.com/*
 // @exclude	http://www.reddit.com/user/*
@@ -15,199 +15,310 @@ if (typeof GM_log === "undefined") {
 }
 if (typeof GM_setValue === "undefined") {
   GM_setValue = function (name, value) {
-    var date = new Date();
-    date.setTime(expdate.getTime()+(750*24*60*60*1000));
-    var expires = "; expires="+date.toGMTString();
+    var expdate = new Date();
+    expdate.setTime(expdate.getTime() + 64800000000);//~2 years
+    var expires = "; expires=" + expdate.toGMTString();
     document.cookie = name+"="+value+expires+"; path=/";
   }
 }
 if (typeof GM_getValue === "undefined") {
   GM_getValue = function (name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for (var i = 0; i < ca.length; ++i) {
-      var c = ca[i];
-      while (c.charAt(0)==' ') c = c.substring(1 ,c.length);
-      if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    var regex = new RegExp(';?\s*'+escape(name)+'=([^;]+)');
+    return document.cookie.match(regex);
+  }
+}
+
+rf_foreach=function(seq, callback){
+  for(var i=0;i<seq.length;++i){
+    callback(seq[i]);
+  }
+}
+
+rf_loadFilters = function() {
+  var json = GM_getValue('rf_filters');
+  GM_log('Loading filters: ' + json);
+  
+  var filters = eval('(' + json + ')');
+  return filters ? filters : [];
+}
+
+rf_saveFilters = function(filters) {
+  var json = '[';// convert to JSON
+  for (var i = 0; i < filters.length; ++i) {
+    var filter = filters[i];
+    
+    if (i > 0) {
+      json += ', ';
     }
-    return null;
+    json +=
+        '{ ' +
+          "'titles' : '" + filter.titles + "', " +
+          "'urls' : '" + filter.urls + "'," +
+          "'users' : '" + filter.users + "'," +
+          "'subreddits' : '" + filter.subreddits + "', " +
+          "'highlight' : " + filter.highlight + ", " +
+          "'color' : '" + filter.color + "'" +
+        ' }';
   }
+  json += ']';
+  
+  GM_log('Saving filters: ' + json);
+  GM_setValue('rf_filters', json);
 }
 
-load_config = function() {
-  var v;
-	
-  get_key = function(key) {
-    var v = GM_getValue(key);
-    return v ? v.split(/\s*,\s*/) : [];
+rf_buildPatterns = function(filters) {
+  var patternTable = [];
+  
+  for (var i = 0; i < filters.length; ++i) {
+    var filter = filters[i];
+    
+    var filterPatterns = { 'user' : [], 'subreddit' : [], 'url' : [], 'title' : [], 'highlight' : false, 'color' : 'yellow' };
+    
+    if (filter.titles) {
+      // add title matches
+      rf_foreach(filter.titles.split(/\s*,\s*/),function(pattern){
+        filterPatterns.title.push(new RegExp(pattern, 'i'));
+      });
+    }
+    
+    if (filter.urls) {
+      // add url matches
+      rf_foreach(filter.urls.split(/\s*,\s*/),function(pattern){
+        filterPatterns.url.push(new RegExp(pattern, 'i'));
+      });
+    }
+    
+    if (filter.users) {
+      // add user patterns
+      rf_foreach(filter.users.split(/\s*,\s*/),function(pattern){
+        filterPatterns.user.push('http://www.reddit.com/user/' + pattern.toLowerCase() + '/');
+      });
+    }
+    
+    if (filter.subreddits) {
+      // add subreddit patterns
+      rf_foreach(filter.subreddits.split(/\s*,\s*/),function(pattern){
+        filterPatterns.subreddit.push('http://www.reddit.com/r/' + pattern.toLowerCase() + '/');
+      });
+    }
+    
+    filterPatterns.highlight = filter.highlight;
+    filterPatterns.color = filter.color;
+    
+    patternTable.push(filterPatterns);
   }
-	
-  return {
-    users: get_key('users'),
-    titles: get_key('titles'),
-    urls: get_key('urls'),
-    subreddits: get_key('subreddits')
-  }
+
+  return patternTable;
 }
 
-get_regexps = function(cfg) {
-  var i, regextbl = { user: [], url: [], title: [], subreddit: [] };
-	
-	// add user matches
-  for (i = 0; i < cfg.users.length; i++) {
-    regextbl.user.push('http://www.reddit.com/user/' + cfg.users[i] + '/');
-  }
-	
-	// add subreddit matches
-  for (i = 0; i < cfg.subreddits.length; i++) {
-    regextbl.subreddit.push('http://www.reddit.com/r/' + cfg.subreddits[i] + '/');
-  }
-
-	// add url matches
-  for (i = 0; i < cfg.urls.length; i++) {
-    regextbl.url.push(new RegExp(cfg.urls[i], 'i'));
-  }
-	
-	// add title matches
-  for (i = 0; i < cfg.titles.length; i++) {
-    regextbl.title.push(new RegExp(cfg.titles[i], 'i'));
-  }
-	
-  return regextbl;
-}
-
-rf_doFilter = function(cfg)
+rf_highlight = function(elem, color)
 {
-  var trs = document.getElementsByTagName('div');
-  var num_matches = 0;
-  var regexps = get_regexps(cfg);
+  elem.style.backgroundColor = color;
+}
 
-  for (var i = 0; i < trs.length; i++) {
-    var tr = trs[i];
+rf_hide = function(elem)
+{
+  elem.style.display = 'none';
+  hidden_headlines.push(elem);
+}
 
-		
-    if (/^thingrow_/.test(tr.id)) {
-      var match = false;
-      var a_list = tr.getElementsByTagName('a');
-      for (var j = 0; !match && j < a_list.length; j++) {
-        var a_element = a_list[j];
-			
-        if (/^title/.test(a_element.className)) {
-					// title match
-          for (var k = 0; k < regexps.title.length; ++k) {
-            if (regexps.title[k].test(a_element.innerHTML)) {
-              tr.style.display = 'none';
-              hidden_headlines.push(tr);
-              ++num_matches;
+rf_doFilter = function()
+{
+  var filters = rf_buildPatterns(rf_loadFilters());
+  var divs = document.getElementsByTagName('div');
+
+  for (var i = 0; i < divs.length; ++i) {
+    var div = divs[i];
+
+    if (!(/^thingrow_/.test(div.id))) continue;
+
+    var match = false;
+    var links = div.getElementsByTagName('a');
+    for (var j = 0; !match && j < links.length; ++j) {
+      var link = links[j];
+
+      for (var k = 0; k < filters.length; ++k) {
+        var filter = filters[k];
+        
+        if (/^title/.test(link.className)) {
+          
+          // title match
+          for (var l = 0; !match && l < filter.title.length; ++l) {
+            var pattern = filter.title[l];
+            
+            if (pattern.test(link.innerHTML)) {
               match = true;
               break;
             }
-          }
-					
-					// url match
-          for (var k = 0; k < regexps.url.length; ++k) {
-            if (regexps.url[k].test(a_element.href)) {
-              tr.style.display = 'none';
-              hidden_headlines.push(tr);
-              ++num_matches;
+          }// [end]for each title
+  
+          // url match
+          for (var l = 0; !match && l < filter.url.length; ++l) {
+            var pattern = filter.url[l];
+            
+            if (pattern.test(link.href)) {
               match = true;
               break;
             }
-          }
-        } else if (a_element.className == 'author') {
-					// user match
-          for (var k = 0; k < regexps.user.length; ++k) {
-            if (regexps.user[k] == a_element.href) {
-              tr.style.display = 'none';
-              hidden_headlines.push(tr);
-              ++num_matches;
+          }// [end]for each url
+        } else if (link.className == 'author') {
+  
+          // user match
+          for (var l = 0; !match && l < filter.user.length; ++l) {
+            var pattern = filter.user[l];
+            
+            if (pattern == link.href.toLowerCase()) {
               match = true;
               break;
             }
-          }
-        } else if (a_element.className == 'hover') {
-					// subreddit match
-          for (var k = 0; k < regexps.subreddit.length; ++k) {
-            if (regexps.subreddit[k] == a_element.href) {
-              tr.style.display = 'none';
-              hidden_headlines.push(tr);
-              ++num_matches;
+          }// [end]for each user
+        } else if (link.className == 'hover') {
+  
+          // subreddit match
+          for (var l = 0; !match && l < filter.subreddit.length; ++l) {
+            var pattern = filter.subreddit[l];
+            
+            if (pattern == link.href.toLowerCase()) {
               match = true;
               break;
             }
-          }
-					//a_element.style.display = 'none';
+          }// [end]for each subreddit
         }
-			
+        
+        if (match) {
+          rf_highlight(div, filter.color);
+          if (!filter.highlight) {
+            rf_hide(div);
+          }
+          break;
+        }
+      }// [end]for each filter
+
+    }// [end]for each link
+  }// [end]for each div
+
+  rf_report(hidden_headlines.length);
+}
+
+rf_reSerialize = function() {
+  var filters = [];
+  var container = document.getElementById('rf_filters');
+  
+  for (var i = 0; i < container.childNodes.length; ++i) {
+    var node = container.childNodes[i];
+    var filter = {'titles' : '', 'urls' : '', 'users' : '', 'subreddits' : '', 'highlight' : false, 'color' : 'yellow'};
+    
+    var subnodes = node.getElementsByTagName('input');
+    for (var j = 0; j < subnodes.length; ++j) {
+      var input = subnodes[j];
+      
+      if (input.type == 'text' && input.value) {
+        if (input.className == 'rf_titles') {
+          filter.titles = input.value;
+        } else if (input.className == 'rf_urls') {
+          filter.urls = input.value;
+        } else if (input.className == 'rf_users') {
+          filter.users = input.value;
+        } else if (input.className == 'rf_subreddits') {
+          filter.subreddits = input.value;
+        } else if (input.className == 'rf_color') {
+          filter.color = input.value;
+        }
+      } else if (input.type == 'checkbox') {
+        filter.highlight = input.checked;
       }
     }
+    filters.push(filter);
+    
   }
-
-  return num_matches;
+  
+  return filters;
 }
 
-rf_saveOptions = function() {
-  GM_setValue('titles', document.getElementById('titlefilter').value);
-  GM_setValue('urls', document.getElementById('urlfilter').value);
-  GM_setValue('users', document.getElementById('userfilter').value);
-  GM_setValue('subreddits', document.getElementById('subredditfilter').value);
-  GM_log('Saved settings. ['+document.getElementById('userfilter').value+']');
+rf_deSerialize = function(filters) {
+  for (var i = 0; i < filters.length; ++i) {
+    var filter = filters[i];
+    
+    rf_prefsAddFilter(filter.titles, filter.urls, filter.users, filter.subreddits, filter.highlight, filter.color);
+  }
 }
 
-rf_loadOptions = function() {
-  document.getElementById('titlefilter').value = GM_getValue('titles') ? GM_getValue('titles') : '';
-  document.getElementById('urlfilter').value = GM_getValue('urls') ? GM_getValue('urls') : '';
-  document.getElementById('userfilter').value = GM_getValue('users') ? GM_getValue('users') : '';
-  document.getElementById('subredditfilter').value = GM_getValue('subreddits') ? GM_getValue('subreddits') : '';
-}
-
-rf_prefs = function() {
-  var forms = document.getElementsByTagName('form');
+rf_doPrefs = function() {
   var newForm = document.createElement('form');
-	//var saveButton = document.createElement('input');
-	
+  newForm.className = 'pretty-form';
+  newForm.innerHTML = '<hr><h1>Reddit Filter and Highlighter</h1><div id="rf_filters"></div><hr><input id="rf_addfilter" type="button" class="btn" value="add filter" /><input id="rf_savefilters" type="button" class="btn" value="save filters" /><span id="rf_savestatus" style="display: none">saved</span><br><a href="http://www.reddit.com/">return to main</a>';
+
+  // append the filter preferences in an appropriate spot
+  var forms = document.getElementsByTagName('form');
   for (var i = 0; i < forms.length; ++i) {
-    if (forms[i].className == 'pretty-form short-text') {
-      forms[i].parentNode.insertBefore(newForm, forms[i].nextSibling);
+    var form = forms[i];
+    
+    if (form.className == 'pretty-form short-text') {
+      form.parentNode.insertBefore(newForm, form.nextSibling);
     }
   }
-	
-  newForm.className = 'pretty-form';
-  newForm.innerHTML = '<h1>Filter Options</h1><table class="content preftable"><tr><th>title filters</th><td class="prefright"><input id="titlefilter" type="text" value="" /></td></tr><tr><th>url filters</th><td class="prefright"><input id="urlfilter" type="text" value="" /></td></tr><tr><th>user filters</th><td class="prefright"><input id="userfilter" type="text" value="" /></td></tr><tr><th>subreddit filters</th><td class="prefright"><input id="subredditfilter" type="text" value="" /></td></tr><tr><td><input id="savefilter" type="button" class="btn" value="save filter options" /></td></tr></table>';
-  document.getElementById('savefilter').addEventListener('click', rf_saveOptions, false);
-  rf_loadOptions();
+
+  document.getElementById('rf_addfilter').addEventListener('click', function() {rf_prefsAddFilter('', '', '', '', true, 'yellow');}, false);
+  document.getElementById('rf_savefilters').addEventListener('click', function() {
+      rf_saveFilters(rf_reSerialize());
+      window.setTimeout(function() {
+        document.getElementById('rf_savestatus').style.display = 'none';
+      }, 4000);
+      document.getElementById('rf_savestatus').style.display = '';
+    document.getElementById('rf_savestatus').innerHTML = 'saved';}, false);
+
+  rf_deSerialize(rf_loadFilters());
 }
 
-rf_report = function(num) {
-  var tbl = document.getElementById('siteTable'),
-  div = document.createElement('div'),
-  msg = num + ' headlines filtered: ';
-  if (!tbl) {
-    tbl = document.getElementById('siteTable_organic');
-  }
-	
-  GM_log(msg);
-  if (!tbl)
-  return;
-	
-  div.innerHTML = '<p id="rf_report"><i>' + msg + ' <a id="rf_unhide" onClick="rf_unhide()">[unhide]</a><i></p>';
-  tbl.parentNode.insertBefore(div, tbl.nextSibling);
-  document.getElementById('rf_unhide').addEventListener('click', rf_unhide, false);
+rf_prefsAddFilter = function(titles, urls, users, subreddits, highlight, color) {
+  var container = document.getElementById('rf_filters');
+  var newFilter = document.createElement('div');
+  var removeButton = document.createElement('input');
+
+  newFilter.style.border = '1px solid black';
+  newFilter.innerHTML = '<table class="content preftable">' +
+      '<tr><th>title filters</th><td class="prefright"><input class="rf_titles" type="text" value="' + (titles ? titles : '') + '" /></td></tr>' +
+      '<tr><th>url filters</th><td class="prefright"><input class="rf_urls" type="text" value="' + (urls ? urls : '') + '" /></td></tr>' +
+      '<tr><th>user filters</th><td class="prefright"><input class="rf_users" type="text" value="' + (users ? users : '') + '" /></td></tr>' +
+      '<tr><th>subreddit filters</th><td class="prefright"><input class="rf_subreddits" type="text" value="' + (subreddits ? subreddits : '') + '" /></td></tr>' +
+      '<tr><th>highlight</th><td class="prefright"><input type="checkbox" "class="rf_highlight" ' + (highlight ? 'checked ' : '' ) +' /> (if unchecked, anything matching this filter will be hidden)</td></tr>' +
+      '<tr><th>highlight color</th><td class="prefright"><input class="rf_color" type="text" value="' + (color ? color : '') + '" /></td></tr>' +
+      '</table>';
+  
+  removeButton.type = 'button';
+  removeButton.class = 'btn';
+  removeButton.value = 'remove this filter';
+  removeButton.addEventListener('click', function() {container.removeChild(newFilter);}, false);
+  
+  newFilter.appendChild(removeButton);
+  container.appendChild(newFilter);
 }
 
 rf_unhide = function() {
   for (var i = 0; i < hidden_headlines.length; ++i) {
     hidden_headlines[i].style.display = '';
-    hidden_headlines[i].style.backgroundColor = 'yellow';
   }
   document.getElementById('rf_report').style.display = 'none';
 }
 
-var cfg = load_config();
+rf_report = function(num) {
+  var msg = num + ' headlines filtered';
+  GM_log(msg);
 
+  if (num > 0) {
+    var div = document.createElement('div');
+    div.innerHTML = '<p id="rf_report"><i>' + msg + ': <a id="rf_unhide" onClick="rf_unhide()">[unhide]</a><i></p>';
+    
+    var siteTable = document.getElementById('siteTable_organic');
+    if (siteTable == null) siteTable = document.getElementById('siteTable');
+    siteTable.parentNode.insertBefore(div, siteTable.nextSibling);
+    document.getElementById('rf_unhide').addEventListener('click', rf_unhide, false);
+  }
+}
+
+// do stuff
 if (/\/prefs\//.test(window.location.href)) {
-  rf_prefs();
+  rf_doPrefs();
 } else {
-  var matches = rf_doFilter(cfg);
-  rf_report(matches);
+  rf_doFilter();
 }
