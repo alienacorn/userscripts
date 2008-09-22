@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name	Reddit Filter and Highlighter
+// @name	Reddit Filter Plus
 // @description	Hide or highlight links by user, title, url or subreddit. Preferences are found on the regular reddit preferences page. Highlight colors may be entered as HTML colors (#123456) or with simple names.
 // @include	http://www.reddit.com/prefs/
 // @include	http://www.reddit.com/*
@@ -246,7 +246,7 @@ rf_deSerialize = function(filters) {
 rf_doPrefs = function() {
   var newForm = document.createElement('form');
   newForm.className = 'pretty-form';
-  newForm.innerHTML = '<hr><h1>Reddit Filter and Highlighter</h1><div id="rf_filters"></div><hr><input id="rf_addfilter" type="button" class="btn" value="add filter" /><input id="rf_savefilters" type="button" class="btn" value="save filters" /><span id="rf_savestatus" style="display: none">saved</span><br><a href="http://www.reddit.com/">return to main</a>';
+  newForm.innerHTML = '<hr><h1>Reddit Filter Plus</h1><div id="rf_filters"></div><hr><input id="rf_addfilter" type="button" class="btn" value="add filter" /><input id="rf_savefilters" type="button" class="btn" value="save filters" /><span id="rf_savestatus" style="display: none">saved</span><br><a href="http://www.reddit.com/">return to main</a>';
 
   // append the filter preferences in an appropriate spot
   var forms = document.getElementsByTagName('form');
