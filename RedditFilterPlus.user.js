@@ -172,7 +172,7 @@ rf_doFilter = function()
               break;
             }
           }// [end]for each user
-        } else if (link.className == 'hover') {
+        } else if (/^subreddit/.test(link.className)) {
   
           // subreddit match
           for (var l = 0; !match && l < filter.subreddit.length; ++l) {
