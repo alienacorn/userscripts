@@ -130,7 +130,7 @@ rf_doFilter = function()
   for (var i = 0; i < divs.length; ++i) {
     var div = divs[i];
 
-    if (!(/^thingrow_/.test(div.id))) continue;
+    if (!(/^entry$/.test(div.className))) continue;
 
     var match = false;
     var links = div.getElementsByTagName('a');
@@ -309,8 +309,9 @@ rf_report = function(num) {
     var div = document.createElement('div');
     div.innerHTML = '<p id="rf_report"><i>' + msg + ': <a id="rf_unhide" onClick="rf_unhide()">[unhide]</a><i></p>';
     
-    var siteTable = document.getElementById('siteTable_organic');
-    if (siteTable == null) siteTable = document.getElementById('siteTable');
+    var siteTable = document.getElementById('siteTable');
+	if (typeof(siteTable) == "undefined") siteTable = document.getElementById('siteTable_organic');
+	if (!siteTable) return;
     siteTable.parentNode.insertBefore(div, siteTable.nextSibling);
     document.getElementById('rf_unhide').addEventListener('click', rf_unhide, false);
   }
