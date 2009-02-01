@@ -130,7 +130,7 @@ rf_doFilter = function()
   for (var i = 0; i < divs.length; ++i) {
     var div = divs[i];
 
-    if (!(/^entry$/.test(div.className))) continue;
+    if (!(/thing/.test(div.className))) continue;
 
     var match = false;
     var links = div.getElementsByTagName('a');
