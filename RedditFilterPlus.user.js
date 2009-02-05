@@ -161,7 +161,17 @@ rf_doFilter = function()
               break;
             }
           }// [end]for each url
-        } else if (link.className == 'author') {
+        } else if (/\/domain\//.test(link.href)) {
+		  // domain match
+          for (var l = 0; !match && l < filter.url.length; ++l) {
+            var pattern = filter.url[l];
+            
+            if (pattern.test(link.href)) {
+              match = true;
+              break;
+            }
+          }// [end]for each url
+		} else if (link.className == 'author') {
   
           // user match
           for (var l = 0; !match && l < filter.user.length; ++l) {
