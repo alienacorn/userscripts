@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name           Reddit: Toggle Side Bar
-// @author         OriginalSyn
-// @namespace      http://greasemonkey.jaredmcateer.com
-// @description	   Hides the Reddit side bar and adds a toggle link in the user control panel area on the header.
+// @name           Reddit: Toggle Side Bar and Footer
+// @author         OriginalSyn - modified by theplaceboeffect
+// @namespace      http://greasemonkey.theplaceboeffect.com
+// @description	   Hides the Reddit side bar and adds a toggle link in the user control panel area on the header. Modified to also hide the Footer from http://userscripts.org/scripts/show/66935.
 // @include        http://www.reddit.com/*
 // ==/UserScript==
 
@@ -19,8 +19,11 @@
 // All your GM code must be inside this function
     function letsJQuery() {
 		unsafeWindow.jQuery('.side').hide();
-		unsafeWindow.jQuery("#header-bottom-right").append(" | <a href='#' id='toggleSideBar'>Toggle Sidebar</a>");
+		unsafeWindow.jQuery('.footer-parent').hide();
+		unsafeWindow.jQuery("#header-bottom-right").append(" | <a href='#' id='toggleSideBar'>SF Toggle</a>");
+		
 		unsafeWindow.jQuery("#toggleSideBar").click(function(){
 			unsafeWindow.jQuery(".side").slideToggle();
+			unsafeWindow.jQuery(".footer-parent").slideToggle();
 		});
     }
