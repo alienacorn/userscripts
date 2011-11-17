@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name	Reddit Filter Plus
 // @description	Hide or highlight links by user, title, url or subreddit. Preferences are found on the regular reddit preferences page. Highlight colors may be entered as HTML colors (#123456) or with simple names.
-// @include	http://www.reddit.com/prefs/
+// @include	https://ssl.reddit.com/prefs/
 // @include	http://www.reddit.com/*
 // @exclude	http://www.reddit.com/user/*
 // @exclude	http://www.reddit.com/info/*
