@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name          Reddit: Eliminate Report and Save Links
 // @description   Remove the report, save, share, and watch links at reddit.com.
-// @include       *reddit.com*
+// @include       http://www.reddit.com/*
+// @include       https://www.reddit.com/*
 // ==/UserScript==
 
 
