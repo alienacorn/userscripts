@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name          Reddit: Floating Link
 // @description   Adds a floating link to the Reddit comments page.
-// @include       *reddit.com*comments*
+// @include       http://www.reddit.com/*comments*
+// @include       https://www.reddit.com/*comments*
 // ==/UserScript==
 
 (function()
