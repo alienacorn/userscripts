@@ -4,6 +4,7 @@
 // @namespace      http://greasemonkey.theplaceboeffect.com
 // @description	   Hides the Reddit side bar and adds a toggle link in the user control panel area on the header. Modified to also hide the Footer from http://userscripts.org/scripts/show/66935.
 // @include        http://www.reddit.com/*
+// @include        https://www.reddit.com/*
 // ==/UserScript==
 
 // Check if jQuery's loaded
