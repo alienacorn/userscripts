@@ -26,6 +26,19 @@ Does not work as of 2014-09-08.
 [Userscripts-mirror.org](http://userscripts-mirror.org/scripts/show/33419)
 [Install from Github](https://raw.githubusercontent.com/alienacorn/userscripts/master/RedditFilterPlus.user.js)
 
+## Reddit: Fix http and np Links
+
+Fix internal links on Reddit:
+
+```
+http://www.reddit.com/* -> https://www.reddit.com/*
+http[s]://np.reddit.com/* -> https://www.reddit.com/*
+```
+
+Works as of 2014-09-12.
+
+[Install from Github](https://raw.githubusercontent.com/alienacorn/userscripts/master/RedditFixHTTPAndNPLinks.user.js)
+
 ## Reddit: Floating Link
 
 Adds a floating article link to the Reddit comments page.
@@ -57,7 +70,7 @@ Written by Jared McAteer, <http://jaredmcateer.com/>
 
 Improved by theplaceboeffect on Userscripts.org.
 
-Does not work as of 2014-09-08.
+Works as of 2014-09-12.
 
 [Userscripts.org](http://userscripts-mirror.org/scripts/show/67594)
 [Userscripts-mirror.org](http://userscripts-mirror.org/scripts/show/67594)
