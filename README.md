@@ -61,6 +61,14 @@ Works as of 2014-09-08.
 [Userscripts-mirror.org](http://userscripts-mirror.org/scripts/show/35704)
 [Install from Github](https://raw.githubusercontent.com/alienacorn/userscripts/master/RedditHideAll.user.js)
 
+## Reddit: Subreddit Filter
+
+Hides links from specified subreddits.
+
+Works as of 2014-09-13.
+
+[Install from Github](https://raw.githubusercontent.com/alienacorn/userscripts/master/RedditSubredditFilter.user.js)
+
 ## Reddit: Toggle Side Bar and Footer
 
 Hides the Reddit side bar and adds a toggle link in the user control
