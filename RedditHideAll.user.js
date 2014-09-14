@@ -18,19 +18,6 @@
 */
 var code_string = "(" + function() {
 	
-	//helper funciton
-	function xpath(p, context) {
-		if(!context) context = document;
-		var i, arr = [], xpr = document.evaluate(p, context, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-		for(i = 0; item = xpr.snapshotItem(i); i++)
-			arr.push(item);
-		return arr;
-	}
-	
-	//grab list at top of page
-	var list = xpath("//div[@id='header-bottom-left']/ul")[0];
-	if(typeof list=="undefined"||!list) return;
-	
 	//create link with hide functionality
 	var link = document.createElement('a');
 	link.setAttribute('href','#');
@@ -44,7 +31,7 @@ var code_string = "(" + function() {
 			remove : function(){
 				--spinner.lock;
 				if(spinner.lock ==0)
-					$('#reddit-hide-all').css("background", "#EFF7FF");				
+					$('#reddit-hide-all').css("background", "");
 			},
 			add : function(){
 				//created ajax spinner with http://www.ajaxload.info/ #EFF7FF and #FF4500 (orangered) 
@@ -107,19 +94,10 @@ var code_string = "(" + function() {
 			alert('None Found.');
 		}
 				
-		// stop default click action
-		event.stopPropagation();
-		event.preventDefault();
+
 	}, true);
 
-	//create new list item with link
-	var item = document.createElement('li');
-	item.appendChild(link);
-	
-	//insert at top of the list
-	var topItem = list.getElementsByTagName('li')[0];
-	list.insertBefore(item, topItem);
-	
+	$('span.nextprev').prepend(' ', link, ' ');
 } + ")()";
 
 // workaround for Google Chrome
