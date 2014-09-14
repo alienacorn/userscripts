@@ -83,3 +83,52 @@ Works as of 2014-09-12.
 [Userscripts.org](http://userscripts-mirror.org/scripts/show/67594)
 [Userscripts-mirror.org](http://userscripts-mirror.org/scripts/show/67594)
 [Install from Github](https://raw.githubusercontent.com/alienacorn/userscripts/master/RedditToggleSideBarAndFooter.user.js)
+
+# Show images bookmarklet
+
+```js
+var elementOrParentIsFixed = function (element) {
+    var $element = $(element);
+    var $checkElements = $element.add($element.parents());
+    var isFixed = false;
+    $checkElements.each(function(){
+        if ($(this).css("position") === "fixed") {
+            isFixed = true;
+            return false;
+        }
+    });
+    return isFixed;
+};
+
+var image_ext = /\.(gif|jpg|jpeg|png)$/;
+var imgur_no_album = /^https?:\/\/[a-z.]*imgur\.com\/(?!(a|gallery)\/)(.*)/;
+
+$('a[href]').each(function(){
+  var href = $(this).attr('href');
+
+  var img_src;
+  var is_img = false;
+  if (href.match(image_ext)){
+    is_img = true;
+    img_src = href;
+  } else if (href.match(imgur_no_album)) {
+    is_img = true;
+    img_src = href.replace(imgur_no_album, 'http://i.imgur.com/$2.jpg');
+  }
+
+  if (is_img) {
+    if(elementOrParentIsFixed(this)) return;
+    var img = $('<img>');
+    img.attr('src', img_src);
+    img.css('max-width', '1000px');
+    $(this).after('<br>', img, '<br>');
+    img.show();
+  }
+});
+```
+
+Run through [minifier](http://javascript-minifier.com/) and then [bookmarklet maker](http://mrcoles.com/bookmarklet/):
+
+```
+javascript:(function()%7Bvar%20elementOrParentIsFixed%3Dfunction(r)%7Bvar%20t%3D%24(r)%2Ce%3Dt.add(t.parents())%2Ca%3D!1%3Breturn%20e.each(function()%7Breturn%22fixed%22%3D%3D%3D%24(this).css(%22position%22)%3F(a%3D!0%2C!1)%3Avoid%200%7D)%2Ca%7D%2Cimage_ext%3D%2F%5C.(gif%7Cjpg%7Cjpeg%7Cpng)%24%2F%2Cimgur_no_album%3D%2F%5Ehttps%3F%3A%5C%2F%5C%2F%5Ba-z.%5D*imgur%5C.com%5C%2F(%3F!(a%7Cgallery)%5C%2F)(.*)%2F%3B%24(%22a%5Bhref%5D%22).each(function()%7Bvar%20r%2Ct%3D%24(this).attr(%22href%22)%2Ce%3D!1%3Bif(t.match(image_ext)%3F(e%3D!0%2Cr%3Dt)%3At.match(imgur_no_album)%26%26(e%3D!0%2Cr%3Dt.replace(imgur_no_album%2C%22http%3A%2F%2Fi.imgur.com%2F%242.jpg%22))%2Ce)%7Bif(elementOrParentIsFixed(this))return%3Bvar%20a%3D%24(%22%3Cimg%3E%22)%3Ba.attr(%22src%22%2Cr)%2Ca.css(%22max-width%22%2C%221000px%22)%2C%24(this).after(%22%3Cbr%3E%22%2Ca%2C%22%3Cbr%3E%22)%2Ca.show()%7D%7D)%7D)()
+```
