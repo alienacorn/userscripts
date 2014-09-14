@@ -2,14 +2,10 @@
 // @name          Reddit Hide All
 // @namespace     http://userscripts.org/users/dbeck
 // @description   Adds a button next to the logo to Hide All 
-// @include       http://reddit.com/*
-// @include       http://*.reddit.com/* 
-// @exclude       http://www.reddit.com/comscore-iframe/*
-// @exclude       http://static.reddit.com/ads/*
-// @include       https://reddit.com/*
-// @include       https://*.reddit.com/*
-// @exclude       https://www.reddit.com/comscore-iframe/*
-// @exclude       https://static.reddit.com/ads/*
+// @match         *://www.reddit.com/*
+// @exclude       */comments/*
+// @exclude       *://www.reddit.com/comscore-iframe/*
+// @exclude       *://static.reddit.com/ads/*
 // @version       4
 // @date          2010.04.20
 // @creator       reddit@douglasbeck.com
