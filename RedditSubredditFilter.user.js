@@ -29,16 +29,20 @@ $('#sub_filter_button').click(function(){
   GM_setValue("filtered", $('#sub_filter_input').val());
 });
 
-var filters = GM_getValue("filtered").split(';');
+var filters = GM_getValue("filtered").toLowerCase().split(';');
 var filterCount = 0;
-for(var i=0; i<filters.length; i++){
-  $('a.subreddit').each(function(){
-    if($(this).html().toLowerCase()=='/r/'+filters[i].toLowerCase()){
+
+var regex = /r\/(.*)/
+
+$('a.subreddit').each(function(){
+    var match = regex.exec($(this).html());
+    var subreddit = match[1].toLowerCase();
+    if ($.inArray(subreddit, filters) > -1)
+    {
       $(this).parent().parent().parent().parent().addClass('sub_filtered');
       filterCount++;
     }
-  });
-}
+});
 
 $('.sub_filtered').hide().css('background', 'yellow');
 
